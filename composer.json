@@ -1,0 +1,31 @@
+{
+  "name": "dvomedia/slim-rabbit-rest",
+  "description": "Enabling communication to REST via RPC using Slim MIddleware",
+  "keywords": [
+    "slim", "framework", "rabbit", "rest"
+  ],
+  "homepage": "http://github.com/dvomedia/slim-rabbit-test",
+  "type": "library",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Bobby DeVeaux",
+      "email": "bobby@dvomedia.net",
+      "homepage": "https://dvomedia.net"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "DVO\\SlimRabbitRest\\tests\\" : "tests/phpunit",
+      "DVO\\SlimRabbitRest\\": "src"
+    }
+  },
+  "require": {
+    "php": ">=7.0.0"
+  },
+  "require-dev": {
+    "slim/slim": "~3.0",
+    "phpunit/phpunit": "^5.2",
+    "php-amqplib/php-amqplib": "2.5.*"
+  }
+}
