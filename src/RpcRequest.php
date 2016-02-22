@@ -10,9 +10,9 @@
  */
 namespace DVO\SlimRabbitRest;
 
-
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 
 use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -25,24 +25,50 @@ class RpcRequest
     /**
      * @var ServerRequestInterface
      */
-    protected $request = null;
+    protected $request  = null;
     protected $response = null;
+    protected $amqp     = null;
+    protected $logger   = null;
 
-    protected $amqp = null;
-
-    // YUCK
+    // For testing. Obvs.
     protected $app = null;
 
     /**
-     * undocumented function
+     * Constructor
      *
      * @return void
-     * @author 
+     * @author
      **/
-    public function __construct(\Slim\App $app, \AMQPConnection $amqp)
+    public function __construct(LoggerInterface $logger, \AMQPConnection $amqp)
     {
-    	$this->amqp = $amqp;
-    	$this->app = $app;
+        $this->amqp   = $amqp;
+        $this->logger = $logger;
+    }
+
+    /**
+     * For testing purposes.
+     *
+     * @return void
+     * @author
+     **/
+    public function setApp(\Slim\App $app)
+    {
+        $this->app = $app;
+    }
+
+    /**
+     * For testing purposes.
+     *
+     * @return Slim\App
+     * @author
+     **/
+    public function getApp()
+    {
+        if (true === isset($this->app)) {
+            return $this->app;
+        }
+
+        return new Slim\App();
     }
 
     /**
@@ -112,26 +138,25 @@ class RpcRequest
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        $this->request = $request;
+        $this->request  = $request;
         $this->response = $response;
 
-        if ("/rpcserver" === (string) $this->request->getUri())
-        {
-	        $channel = $this->amqp->channel();
-	        $channel->queue_declare('rpc_queue', false, false, false, false);
+        if ("/rpcserver" === (string) $this->request->getUri()) {
+            $channel = $this->amqp->channel();
+            $channel->queue_declare('rpc_queue', false, false, false, false);
 
-	        echo "\n [x] Awaiting RPC requests\n";
+            $this->logger->info("[x] Awaiting RPC requests");
 
-	        $channel->basic_qos(null, 1, null);
-	        $channel->basic_consume('rpc_queue', '', false, false, false, false, [$this, 'callback']);
+            $channel->basic_qos(null, 1, null);
+            $channel->basic_consume('rpc_queue', '', false, false, false, false, [$this, 'callback']);
 
-	        while (count($channel->callbacks)) {
-	            $channel->wait();
-	        }
+            while (count($channel->callbacks)) {
+                $channel->wait();
+            }
 
-	        $channel->close();
-	        $this->amqp->close();
-	    }
+            $channel->close();
+            $this->amqp->close();
+        }
 
         return $next($this->request, $response);
     }
@@ -141,12 +166,14 @@ class RpcRequest
      * seperate function to help with testing.
      *
      * @return void
-     * @author 
+     * @author
      **/
     public function callback($req)
     {
         $message = json_decode($req->body, true);
-        echo " [.] " . print_r($message, true) . "\n";
+
+        //monolog
+        $this->logger->info(" [.] " . print_r($message, true));
 
         $this->request = self::createFromEnvironment(\Slim\Http\Environment::mock([
             'REQUEST_METHOD'    => $message['method'],
@@ -155,7 +182,7 @@ class RpcRequest
             'CONTENT_TYPE'      => 'application/json',
         ]), $message['content']);
 
-        $this->response = $this->app->process($this->request, $this->response);
+        $this->response = $this->getApp()->process($this->request, $this->response);
 
         $this->sendResponse($req);
     }
@@ -165,11 +192,11 @@ class RpcRequest
      * called from $this->callback
      *
      * @return void
-     * @author 
+     * @author
      **/
     public function sendResponse($req)
     {
-    	$msg = new AMQPMessage(
+        $msg = new AMQPMessage(
             $this->response,
             ['correlation_id' => $req->get('correlation_id')]
         );
@@ -192,15 +219,19 @@ class RpcRequest
      *
      * @return self
      */
-    public static function createFromEnvironment(\Slim\Http\Environment $environment, string $body)
+    public static function createFromEnvironment(\Slim\Http\Environment $environment, string $contents)
     {
         $method = $environment['REQUEST_METHOD'];
         $uri = \Slim\Http\Uri::createFromEnvironment($environment);
         $headers = \Slim\Http\Headers::createFromEnvironment($environment);
         $cookies = \Slim\Http\Cookies::parseHeader($headers->get('Cookie', []));
         $serverParams = $environment->all();
-        file_put_contents('php://filter/write=string.rot13/resource=body.txt', $body);
-        $body = new \Slim\Http\Body(fopen('php://filter/read=string.rot13/resource=body.txt', 'r'));
+
+        // Seems the only way to stay PSR-7 compliant..?
+        $stream = fopen('php://memory', 'r+');
+        fwrite($stream, $contents);
+        rewind($stream);
+        $body = new \Slim\Http\Body($stream);
 
         $uploadedFiles = \Slim\Http\UploadedFile::createFromEnvironment($environment);
 

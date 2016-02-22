@@ -26,6 +26,8 @@
   "require-dev": {
     "slim/slim": "~3.0",
     "phpunit/phpunit": "^5.2",
-    "php-amqplib/php-amqplib": "2.5.*"
+    "squizlabs/php_codesniffer": "2.5.1",
+    "php-amqplib/php-amqplib": "2.5.*",
+    "monolog/monolog": "^1.13"
   }
 }

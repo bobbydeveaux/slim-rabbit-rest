@@ -46,13 +46,13 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
         };
 
         /** @var CliRequest $cliRequest */
-        $mamqpchan  = $this->getMock('\AMQPChannel', ['queue_declare', 'basic_qos', 'basic_consume', 'close'], [], '', false);
+        $mamqpchan = $this->getMock('\AMQPChannel', ['queue_declare', 'basic_qos', 'basic_consume', 'close'], [], '', false);
         $mamqpchan->expects($this->once())
                   ->method('close');
 
         $mamqpchan->callbacks = [];
 
-        $mamqpconn  = $this->getMock('\AMQPConnection', ['channel', 'close'], [], '', false);
+        $mamqpconn = $this->getMock('\AMQPConnection', ['channel', 'close'], [], '', false);
         $mamqpconn->expects($this->once())
         	      ->method('channel')
                   ->willReturn($mamqpchan);
@@ -86,11 +86,15 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
 	        return $response;
 		});
 
-        $rpcRequest = $this->getMock('DVO\SlimRabbitRest\RpcRequest', ['sendResponse'], [$app, $mamqpconn]);
+		$logger = $this->getMock('\Monolog\Logger', [], [], '', false);
+
+        $rpcRequest = $this->getMock('DVO\SlimRabbitRest\RpcRequest', ['sendResponse'], [$logger, $mamqpconn]);
         $rpcRequest->expects($this->once())
                    ->method('sendResponse')
                    ->with()
                    ->willReturn(true);
+
+        $rpcRequest->setApp($app);
 
         /** @var  ResponseInterface $res */
         $res = $rpcRequest($req, $res, $next);
