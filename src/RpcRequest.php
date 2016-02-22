@@ -141,7 +141,7 @@ class RpcRequest
         $this->request  = $request;
         $this->response = $response;
 
-        if ("/rpcserver" === (string) $this->request->getUri()) {
+        if ("/rpcserver" === (string) $this->request->getUri()->getPath()) {
             $channel = $this->amqp->channel();
             $channel->queue_declare('rpc_queue', false, false, false, false);
 

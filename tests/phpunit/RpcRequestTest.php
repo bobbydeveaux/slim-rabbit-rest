@@ -19,7 +19,7 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
      */
     public function requestFactory()
     {
-        $uri = Uri::createFromString('/rpcserver');
+        $uri = Uri::createFromString('http://localhost/rpcserver');
         $headers = new Headers();
         $cookies = [];
         $serverParams = [];
@@ -52,7 +52,7 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
 
         $mamqpchan->callbacks = [];
 
-        $mamqpconn = $this->getMock('\AMQPConnection', ['channel', 'close'], [], '', false);
+        $mamqpconn = $this->getMock('\PhpAmqpLib\Connection\AMQPConnection', ['channel', 'close'], [], '', false);
         $mamqpconn->expects($this->once())
         	      ->method('channel')
                   ->willReturn($mamqpchan);
