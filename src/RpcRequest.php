@@ -39,7 +39,7 @@ class RpcRequest
      * @return void
      * @author
      **/
-    public function __construct(LoggerInterface $logger, \AMQPConnection $amqp)
+    public function __construct(LoggerInterface $logger, AMQPConnection $amqp)
     {
         $this->amqp   = $amqp;
         $this->logger = $logger;
