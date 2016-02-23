@@ -94,6 +94,8 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
                    ->with()
                    ->willReturn(true);
 
+        $rpcRequest->setApp($app);
+
         /** @var  ResponseInterface $res */
         $res = $rpcRequest($req, $res, $next);
 

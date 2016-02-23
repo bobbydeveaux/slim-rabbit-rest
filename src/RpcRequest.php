@@ -43,7 +43,6 @@ class RpcRequest
     {
         $this->amqp   = $amqp;
         $this->logger = $logger;
-        $this->app    = $app;
     }
 
     /**
@@ -66,8 +65,27 @@ class RpcRequest
     public function getApp()
     {
         if (true === isset($this->app)) {
+            $this->logger->info("App already exist"); 
             return $this->app;
         }
+
+        $this->logger->info("Creating App");
+
+        $app = new \Slim\App();
+        
+        $app->get('/', function($req, $res, $args) {
+
+            $body = json_encode(['testing']);
+
+            $res->write($body);
+            $res = $res->withHeader('Content-Type', 'application/json');
+
+            return $res;
+        });
+
+        $this->app = $app;
+    
+        return $this->app;
     }
 
     /**
@@ -138,7 +156,6 @@ class RpcRequest
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         $this->request  = $request;
-        $this->response = $response;
 
         if ("/rpcserver" === (string) $this->request->getUri()->getPath()) {
             $channel = $this->amqp->channel();
@@ -172,7 +189,7 @@ class RpcRequest
         $message = json_decode($req->body, true);
 
         //monolog
-        $this->logger->info(" [.] " . print_r($message, true));
+        $this->logger->info(" [.] Message Recieved");
 
         $this->request = self::createFromEnvironment(\Slim\Http\Environment::mock([
             'REQUEST_METHOD'    => $message['method'],
@@ -181,7 +198,9 @@ class RpcRequest
             'CONTENT_TYPE'      => 'application/json',
         ]), $message['content']);
 
-        $this->response = $this->getApp()->process($this->request, $this->response);
+        $this->logger->info("Request Processed");
+
+        $this->response = $this->getApp()->process($this->request, new \Slim\Http\Response());
 
         $this->sendResponse($req);
     }
