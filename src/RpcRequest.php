@@ -39,10 +39,11 @@ class RpcRequest
      * @return void
      * @author
      **/
-    public function __construct(LoggerInterface $logger, AMQPConnection $amqp)
+    public function __construct(LoggerInterface $logger, \Slim\App $app, AMQPConnection $amqp)
     {
         $this->amqp   = $amqp;
         $this->logger = $logger;
+        $this->app    = $app;
     }
 
     /**
@@ -67,8 +68,6 @@ class RpcRequest
         if (true === isset($this->app)) {
             return $this->app;
         }
-
-        return new Slim\App();
     }
 
     /**

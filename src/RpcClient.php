@@ -10,7 +10,7 @@ use PhpAmqpLib\Message\AMQPMessage;
  *
  * Perhaps this needs to confirm to some PSR..
  * But it's AMQP/RPC, and is not HTTP at all.
- * 
+ *
  * Usage: $RpcClient->get($path, $params)
  * e.g. $RpcClient->get('/user/1', [])
  *      $RpcClient->post('/user', ['name' => 'bob'])
