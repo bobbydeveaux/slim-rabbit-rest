@@ -88,13 +88,12 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
 
 		$logger = $this->getMock('\Monolog\Logger', [], [], '', false);
 
-        $rpcRequest = $this->getMock('DVO\SlimRabbitRest\RpcRequest', ['sendResponse'], [$logger, $app, $mamqpconn]);
+        $rpcRequest = $this->getMock('DVO\SlimRabbitRest\RpcRequest', ['sendResponse'], [$logger, $app->getContainer(), $mamqpconn]);
         $rpcRequest->expects($this->once())
                    ->method('sendResponse')
                    ->with()
                    ->willReturn(true);
 
-        $rpcRequest->setApp($app);
 
         /** @var  ResponseInterface $res */
         $res = $rpcRequest($req, $res, $next);

@@ -31,7 +31,9 @@ class RpcRequest
     protected $logger   = null;
 
     // For testing. Obvs.
-    protected $app = null;
+    protected $app       = null;
+    protected $container = null;
+
 
     /**
      * Constructor
@@ -39,10 +41,11 @@ class RpcRequest
      * @return void
      * @author
      **/
-    public function __construct(LoggerInterface $logger, \Slim\App $app, AMQPConnection $amqp)
+    public function __construct(LoggerInterface $logger, \Slim\Container $container, AMQPConnection $amqp)
     {
-        $this->amqp   = $amqp;
-        $this->logger = $logger;
+        $this->amqp      = $amqp;
+        $this->logger    = $logger;
+        $this->container = $container;
     }
 
     /**
@@ -65,23 +68,13 @@ class RpcRequest
     public function getApp()
     {
         if (true === isset($this->app)) {
-            $this->logger->info("App already exist"); 
+            $this->logger->info("App already exist");
             return $this->app;
         }
 
         $this->logger->info("Creating App");
 
-        $app = new \Slim\App();
-        
-        $app->get('/', function($req, $res, $args) {
-
-            $body = json_encode(['testing']);
-
-            $res->write($body);
-            $res = $res->withHeader('Content-Type', 'application/json');
-
-            return $res;
-        });
+        $app = new \Slim\App($this->container);
 
         $this->app = $app;
     
