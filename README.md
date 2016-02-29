@@ -12,7 +12,7 @@ composer require dvomedia/slim-rabbit-rest
 Also requires slim-cli, and phpamqp-lib
 
 ```
-composer require videlalvaro/php-amqplib
+composer require php-amqplib/php-amqplib
 composer require pavlakis/slim-cli
 ```
 
@@ -26,12 +26,11 @@ php public/index.php /rpcserver GET
 ```
 $app->get('/rpcserver', function($req, $res, $args){
 	print 'Starting RPC Server';
-})->add(function($request, $response, $next) use ($container) {
-	return new \DVO\SlimRabbitRest\RpcRequest(
-		$container['logger'],
-		$container['amqp']
-	);
-});
+})->add(new \DVO\SlimRabbitRest\RpcRequest(
+	$container['logger'],
+	$app->getContainer(),
+	$container['amqp']
+));
 ```
 
 Simples :)

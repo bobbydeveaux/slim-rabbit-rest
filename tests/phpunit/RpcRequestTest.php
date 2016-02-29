@@ -102,7 +102,7 @@ class RpcRequestTest extends \PHPUnit_Framework_TestCase
         $message = $this->getMock('stdClass', ['body', 'get'], [], '', false);
        
        	$data['content'] = json_encode($data['parameters']);
-        $message->body = json_encode($data);
+        $message->body   = json_encode($data);
 
         
         $rpcRequest->callback($message);
